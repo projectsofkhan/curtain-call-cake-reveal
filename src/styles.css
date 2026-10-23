@@ -454,6 +454,8 @@ html { scrollbar-color: var(--wed-green) var(--wed-white); scrollbar-width: thin
   .birthday-invitation *, .birthday-invitation *::before, .birthday-invitation *::after,
   .curtain-wrap *, .curtain-wrap *::before, .curtain-wrap *::after { animation: none !important; }
   .petal, .gyp-dot { display: none; }
+  /* Popping is a direct response to the user's tap, so keep it even with reduced motion. */
+  .birthday-invitation .balloon.balloon-pop { animation: balloon-pop .25s ease-out forwards !important; }
 }
 @media print {
   .curtain-wrap, .petal, .gyp-dot, .floral-bg, .venue-map, .balloon-sky, .cake-glow { display: none !important; }
@@ -487,6 +489,29 @@ html { scrollbar-color: var(--wed-green) var(--wed-white); scrollbar-width: thin
   100% { translate: -26px -135vh; rotate: var(--sway); }
 }
 @keyframes string-sway { 0%,100% { rotate: 7deg; } 50% { rotate: -7deg; } }
+/* Popping: tap a balloon and it bursts with a ring, then a new one rises in its place. */
+.balloon { pointer-events: auto; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.balloon:not(.balloon-pop):hover { filter: brightness(1.08); }
+.balloon-pop { animation: balloon-pop .55s cubic-bezier(.34, 1.56, .64, 1) forwards; pointer-events: none; }
+@keyframes balloon-pop {
+  0% { scale: 1; opacity: 1; }
+  30% { scale: 1.25 .85; opacity: 1; }
+  60% { scale: 1.5 .35; opacity: .9; }
+  100% { scale: 1.7 .12; opacity: 0; }
+}
+.balloon-burst {
+  position: absolute; inset: -22%;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, var(--wed-green) 45%, transparent);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--wed-green) 25%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  animation: balloon-burst .55s ease-out forwards;
+}
+@keyframes balloon-burst {
+  0% { opacity: .9; scale: .5; }
+  100% { opacity: 0; scale: 1.7; }
+}
 
 /* ============ The birthday cake ============ */
 .cake-section { padding-top: 34px; padding-bottom: 64px; position: relative; }

@@ -57,26 +57,44 @@ function Rain() {
   );
 }
 
-type Bal = { l: number; d: number; dl: number; s: number; k: number; sw: number };
+type Bal = { id: number; l: number; d: number; dl: number; s: number; k: number; sw: number };
+
+let balloonSeq = 0;
+function makeBalloon(i: number, fresh = false): Bal {
+  return {
+    id: ++balloonSeq,
+    l: i % 2 === 0 ? 2 + Math.random() * 16 : 80 + Math.random() * 16,
+    d: 15 + Math.random() * 13,
+    dl: fresh ? 0 : -Math.random() * 24,
+    s: 0.55 + Math.random() * 0.75,
+    k: i % 3,
+    sw: (Math.random() * 10 - 5),
+  };
+}
 
 function Balloons() {
   const [bals, setBals] = useState<Bal[]>([]);
+  const [popping, setPopping] = useState<number[]>([]);
   useEffect(() => {
-    setBals(Array.from({ length: 9 }, (_, i) => ({
-      l: i % 2 === 0 ? 2 + Math.random() * 16 : 80 + Math.random() * 16,
-      d: 15 + Math.random() * 13,
-      dl: -Math.random() * 24,
-      s: 0.55 + Math.random() * 0.75,
-      k: i % 3,
-      sw: (Math.random() * 10 - 5),
-    })));
+    setBals(Array.from({ length: 9 }, (_, i) => makeBalloon(i)));
   }, []);
+  const pop = (id: number) => {
+    setPopping(prev => (prev.includes(id) ? prev : [...prev, id]));
+    // Let the pop play out, then a fresh balloon drifts up from below in its place.
+    setTimeout(() => {
+      setBals(prev => prev.map(b => (b.id === id ? makeBalloon(Math.floor(Math.random() * 6), true) : b)));
+      setPopping(prev => prev.filter(p => p !== id));
+    }, 700);
+  };
   return (
-    <div className="balloon-sky" aria-hidden="true">
-      {bals.map((b, i) => (
+    <div className="balloon-sky">
+      {bals.map(b => (
         <span
-          key={i}
-          className={`balloon balloon-v${b.k}`}
+          key={b.id}
+          role="button"
+          tabIndex={0}
+          aria-label="Pop this balloon"
+          className={`balloon balloon-v${b.k}${popping.includes(b.id) ? " balloon-pop" : ""}`}
           style={{
             left: `${b.l}%`,
             animationDuration: `${b.d}s`,
@@ -84,8 +102,11 @@ function Balloons() {
             scale: `${b.s}`,
             "--sway": `${b.sw}deg`,
           } as React.CSSProperties}
+          onClick={() => pop(b.id)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pop(b.id); } }}
         >
           <i className="balloon-string" />
+          {popping.includes(b.id) && <span className="balloon-burst" aria-hidden />}
         </span>
       ))}
     </div>
