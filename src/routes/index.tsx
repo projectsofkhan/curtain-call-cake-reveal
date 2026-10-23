@@ -5,6 +5,7 @@ import { INVITATION, OPENING_PAUSE_MS } from "@/lib/invitation";
 import whiteFlorals from "@/assets/green-white-florals.png";
 import gypSpray from "@/assets/gypsophila-spray.png";
 import gypGarland from "@/assets/gypsophila-garland.png";
+import cakeImage from "@/assets/cake.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -91,183 +92,29 @@ function Balloons() {
   );
 }
 
-const CANDLE_COUNT = 5;
-type Puff = { id: number; side: number };
-
 function Cake() {
-  const [lit, setLit] = useState<boolean[]>(() => Array(CANDLE_COUNT).fill(false));
-  const [wishMade, setWishMade] = useState(false);
-  const [puffs, setPuffs] = useState<Puff[]>([]);
-  const [confetti, setConfetti] = useState<{ l: number; d: number; dl: number; r: number; k: number }[]>([]);
-  const [micState, setMicState] = useState<"off" | "on" | "denied">("off");
-  const [micHint, setMicHint] = useState("");
-  const rootRef = useRef<HTMLElement>(null);
-  const litRef = useRef(lit);
-  const puffId = useRef(0);
-  const audioRef = useRef<{ ctx: AudioContext; stream: MediaStream; raf: number } | null>(null);
-  const lastBlowAt = useRef(0);
-  litRef.current = lit;
-
-  // Candles light themselves one by one when the cake scrolls into view.
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const io = new IntersectionObserver((entries) => {
-      if (!entries.some(e => e.isIntersecting)) return;
-      io.disconnect();
-      for (let i = 0; i < CANDLE_COUNT; i++) {
-        timers.push(setTimeout(() => setLit(prev => prev.map((v, j) => (j === i ? true : v))), 350 + i * 320));
-      }
-    }, { threshold: 0.45 });
-    io.observe(root);
-    return () => {
-      io.disconnect();
-      timers.forEach(clearTimeout);
-    };
-  }, []);
-
-  const burstConfetti = () => {
-    setConfetti(Array.from({ length: 70 }, () => ({
-      l: 8 + Math.random() * 84,
-      d: 1.7 + Math.random() * 1.6,
-      dl: Math.random() * 0.5,
-      r: Math.random() * 720 - 360,
-      k: Math.floor(Math.random() * 3),
-    })));
-    setTimeout(() => setConfetti([]), 4200);
-  };
-
-  const extinguishOne = () => {
-    const current = litRef.current;
-    const idx = current.lastIndexOf(true);
-    if (idx === -1) return false;
-    setLit(prev => prev.map((v, j) => (j === idx ? false : v)));
-    const pid = ++puffId.current;
-    setPuffs(prev => [...prev, { id: pid, side: idx }]);
-    setTimeout(() => setPuffs(prev => prev.filter(p => p.id !== pid)), 1800);
-    if (current.filter(Boolean).length === 1) {
-      setTimeout(() => {
-        setWishMade(true);
-        burstConfetti();
-      }, 700);
-    }
-    return true;
-  };
-
-  // Blow with real breath: listen to the microphone and snuff a candle on each gust.
-  const startMic = async () => {
-    if (micState === "on") return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const ctx = new AudioContext();
-      const src = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.55;
-      src.connect(analyser);
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      setMicState("on");
-      setMicHint("Blow at your screen!");
-      const loop = () => {
-        analyser.getByteFrequencyData(data);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) sum += data[i];
-        const avg = sum / data.length;
-        const now = performance.now();
-        if (avg > 58 && now - lastBlowAt.current > 420) {
-          lastBlowAt.current = now;
-          extinguishOne();
-        }
-        audioRef.current!.raf = requestAnimationFrame(loop);
-      };
-      audioRef.current = { ctx, stream, raf: requestAnimationFrame(loop) };
-    } catch {
-      setMicState("denied");
-      setMicHint("Mic not available — tap the candles instead.");
-    }
-  };
-
-  useEffect(() => () => {
-    const a = audioRef.current;
-    if (a) {
-      cancelAnimationFrame(a.raf);
-      a.stream.getTracks().forEach(t => t.stop());
-      a.ctx.close();
-    }
-  }, []);
-
-  const relight = () => {
-    setWishMade(false);
-    setMicHint("");
-    for (let i = 0; i < CANDLE_COUNT; i++) {
-      setTimeout(() => setLit(prev => prev.map((v, j) => (j === i ? true : v))), 200 + i * 260);
-    }
-  };
-
   return (
-    <section ref={rootRef} className="section cake-section text-center" aria-label="Birthday cake">
+    <section className="section cake-section text-center" aria-label="Birthday cake">
       <div className="cake-glow" aria-hidden />
-      <div className="cake-confetti" aria-hidden>
-        {confetti.map((c, i) => (
-          <span
-            key={i}
-            className={`confetti-piece confetti-k${c.k}`}
-            style={{
-              left: `${c.l}%`,
-              animationDuration: `${c.d}s`,
-              animationDelay: `${c.dl}s`,
-              rotate: `${c.r}deg`,
-            }}
-          />
-        ))}
-      </div>
       <div className="cake-stage">
         <span className="cake-gyp cake-gyp-left" aria-hidden><img src={gypSpray} width={1024} height={1600} alt="" /></span>
         <span className="cake-gyp cake-gyp-right" aria-hidden><img src={gypSpray} width={1024} height={1600} alt="" /></span>
-        <div className="cake-candles" aria-hidden={false}>
-          {lit.map((isLit, i) => (
-            <button
-              key={i}
-              type="button"
-              className={`candle${isLit ? " lit" : ""}`}
-              aria-label={isLit ? "Blow out this candle" : "Candle is out"}
-              onClick={() => { extinguishOne(); }}
-            >
-              <span className="flame" />
-              <span className="flame-halo" />
-              {puffs.filter(p => p.side === i).map(p => (
-                <span key={p.id} className="smoke" style={{ "--i": i } as React.CSSProperties} />
-              ))}
-            </button>
-          ))}
-        </div>
-        <div className="cake-tier cake-tier-top"><span className="cake-dots" /></div>
-        <div className="cake-tier cake-tier-mid"><span className="cake-dots" /></div>
-        <div className="cake-tier cake-tier-base"><span className="cake-dots" /><span className="cake-band" /></div>
-        <div className="cake-plate" />
+        <img
+          src={cakeImage}
+          width={1024}
+          height={1280}
+          className="cake-image"
+          loading="lazy"
+          alt="A three-tier sage green and white birthday cake dressed with gypsophila flowers"
+        />
         <div className="cake-shadow" aria-hidden />
       </div>
-      <div className="invitation-divider" aria-hidden><i className="fa-solid fa-leaf" /></div>
-      {!wishMade ? (
-        <div className="cake-cta reveal-on">
-          <p className="eyebrow">MAKE A WISH, THEN BLOW THE CANDLES AWAY</p>
-          <div className="cake-cta-row">
-            <Button asChild variant="outline" className="wed-btn"><button type="button" onClick={startMic}><i className="fa-solid fa-wind" aria-hidden />{micState === "on" ? "Listening…" : "Blow with your breath"}</button></Button>
-            <Button asChild variant="outline" className="wed-btn"><button type="button" onClick={extinguishOne}><i className="fa-solid fa-hand-pointer" aria-hidden />Tap a candle</button></Button>
-          </div>
-          {micHint && <p className="cake-mic-hint">{micHint}</p>}
-        </div>
-      ) : (
-        <div className="cake-wish reveal-on">
-          <i className="fa-solid fa-star cake-wish-star" aria-hidden />
-          <p className="cake-wish-line">Happy Birthday, {INVITATION.name.split(" ")[0]}!</p>
-          <p className="eyebrow">YOUR WISH IS ON ITS WAY</p>
-          <div className="cake-cta-row">
-            <Button asChild variant="outline" className="wed-btn"><button type="button" onClick={relight}><i className="fa-solid fa-fire" aria-hidden />Light them again</button></Button>
-          </div>
-        </div>
-      )}
+      <div className="invitation-divider reveal" aria-hidden><i className="fa-solid fa-leaf" /></div>
+      <div className="cake-wish reveal">
+        <i className="fa-solid fa-star cake-wish-star" aria-hidden />
+        <p className="cake-wish-line">Happy Birthday, {INVITATION.name.split(" ")[0]}!</p>
+        <p className="eyebrow">MAY EVERY WISH OF YOURS COME TRUE</p>
+      </div>
     </section>
   );
 }
@@ -301,7 +148,7 @@ function Index() {
       lenis?.start();
     };
     // The invitation must remain reachable even if animation libraries fail to load.
-    const fallbackTimer = setTimeout(finish, 4500);
+    const fallbackTimer = setTimeout(finish, 7000);
     (async () => {
       try {
         const [{ gsap }, { ScrollTrigger }, { default: Lenis }] = await Promise.all([
@@ -335,18 +182,19 @@ function Index() {
               tl.to(".wed-main", { opacity: 1, duration: .2 }).to(".curtain-wrap", { opacity: 0, duration: .2 }, 0);
               return;
             }
-            // Florals flutter away, valance lifts, panels sweep open, then the curtain melts away.
-            tl.to(".curtain-garland", { y: -22, opacity: 0, scale: .94, duration: .55, ease: "power2.in" }, .05)
-              .to(".curtain-gyp", { y: -28, opacity: 0, scale: .94, duration: .55, ease: "power2.in", stagger: .04 }, .12)
-              .to(".valance-swag", { yPercent: -170, opacity: 0, duration: .6, ease: "power2.in" }, .22)
-              .to(".curtain-valance", { yPercent: -130, opacity: 0, duration: .65, ease: "power3.in" }, .26)
-              .to(".curtain-rope, .tassel", { opacity: 0, duration: .35 }, .35)
-              .to(".curtain-left", { xPercent: -106, scaleX: .82, skewY: -5, duration: 1.05, ease: "power4.inOut" }, .4)
-              .to(".curtain-right", { xPercent: 106, scaleX: .82, skewY: 5, duration: 1.05, ease: "power4.inOut" }, .4)
-              .to(".wed-main", { opacity: 1, duration: .9, ease: "power2.out" }, .75)
-              .fromTo(".hero-anim", { opacity: 0, y: 22, rotationX: -14 }, { opacity: 1, y: 0, rotationX: 0, stagger: .07, duration: .8, ease: "power3.out" }, .85)
-              .fromTo(".hero-fade", { opacity: 0, scale: 1.1 }, { opacity: 1, scale: 1, duration: 1.1, stagger: .09, ease: "power2.out" }, .85)
-              .to(".curtain-wrap", { opacity: 0, duration: .35, ease: "power1.in" }, 1.15);
+            // A slow, silky reveal: florals drift away, the valance lifts gently,
+            // the panels sweep open in a long smooth glide, then the curtain melts away.
+            tl.to(".curtain-garland", { y: -24, opacity: 0, scale: .95, duration: .9, ease: "power1.inOut" }, .1)
+              .to(".curtain-gyp", { y: -30, opacity: 0, scale: .95, duration: .9, ease: "power1.inOut", stagger: .1 }, .25)
+              .to(".valance-swag", { yPercent: -175, opacity: 0, duration: 1.0, ease: "power2.inOut", stagger: .08 }, .5)
+              .to(".curtain-valance", { yPercent: -135, opacity: 0, duration: 1.1, ease: "power2.inOut" }, .6)
+              .to(".curtain-rope, .tassel", { opacity: 0, duration: .6, ease: "power1.in" }, .85)
+              .to(".curtain-left", { xPercent: -106, scaleX: .82, skewY: -4, duration: 2.6, ease: "power2.inOut" }, 1.05)
+              .to(".curtain-right", { xPercent: 106, scaleX: .82, skewY: 4, duration: 2.6, ease: "power2.inOut" }, 1.2)
+              .to(".wed-main", { opacity: 1, duration: 1.5, ease: "power1.out" }, 2.0)
+              .fromTo(".hero-anim", { opacity: 0, y: 22, rotationX: -14 }, { opacity: 1, y: 0, rotationX: 0, stagger: .08, duration: 1.0, ease: "power3.out" }, 2.25)
+              .fromTo(".hero-fade", { opacity: 0, scale: 1.1 }, { opacity: 1, scale: 1, duration: 1.5, stagger: .1, ease: "power2.out" }, 2.25)
+              .to(".curtain-wrap", { opacity: 0, duration: .8, ease: "power1.inOut" }, 3.05);
             gsap.utils.toArray<HTMLElement>(".reveal", root).forEach((el) => {
               gsap.from(el, { opacity: 0, y: 40, duration: 1, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 90%" } });
             });
