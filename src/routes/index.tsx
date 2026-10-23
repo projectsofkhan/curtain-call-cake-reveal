@@ -72,6 +72,18 @@ function makeBalloon(i: number, fresh = false): Bal {
   };
 }
 
+function playPopSound() {
+  try {
+    const audio = new Audio("/pop.mp4");
+    audio.currentTime = 0;
+    audio.play().catch(() => {
+      // Handled silently if autoplay is blocked or file is missing
+    });
+  } catch {
+    // Ignore audio initialization errors
+  }
+}
+
 function Balloons() {
   const [bals, setBals] = useState<Bal[]>([]);
   const [popping, setPopping] = useState<number[]>([]);
@@ -79,6 +91,7 @@ function Balloons() {
     setBals(Array.from({ length: 9 }, (_, i) => makeBalloon(i)));
   }, []);
   const pop = (id: number) => {
+    playPopSound();
     setPopping(prev => (prev.includes(id) ? prev : [...prev, id]));
     // Let the pop play out, then a fresh balloon drifts up from below in its place.
     setTimeout(() => {
