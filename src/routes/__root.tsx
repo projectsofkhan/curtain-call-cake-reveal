@@ -78,6 +78,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "Mohd Shamir — Birthday Invitation" },
+      { name: "description", content: "You are cordially invited to Mohd Shamir’s birthday celebration on Sunday, 25 October, at Gulshan e navab, Islamnagar Ghasipura, Bhopal." },
+      { property: "og:title", content: "Mohd Shamir — Birthday Invitation" },
+      { property: "og:description", content: "Birthday celebration · Sunday, 25 October · Gulshan e navab, Bhopal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
