@@ -454,6 +454,8 @@ html { scrollbar-color: var(--wed-green) var(--wed-white); scrollbar-width: thin
   .birthday-invitation *, .birthday-invitation *::before, .birthday-invitation *::after,
   .curtain-wrap *, .curtain-wrap *::before, .curtain-wrap *::after { animation: none !important; }
   .petal, .gyp-dot { display: none; }
+  /* Popping is a direct response to the user's tap, so keep it even with reduced motion. */
+  .birthday-invitation .balloon.balloon-pop { animation: balloon-pop .25s ease-out forwards !important; }
 }
 @media print {
   .curtain-wrap, .petal, .gyp-dot, .floral-bg, .venue-map, .balloon-sky, .cake-glow { display: none !important; }
