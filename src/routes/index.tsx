@@ -57,10 +57,10 @@ function Rain() {
   );
 }
 
-type Bal = { l: number; d: number; dl: number; s: number; k: number; sw: number };
+type Bal = { l: number; d: number; dl: number; s: number; k: number; sw: number; popped?: boolean };
 
 function Balloons() {
-  const [bals, setBals] = useState<Bal[]>([]);
+  const [bals, setBals] = useState<(Bal)[]>([]);
   useEffect(() => {
     setBals(Array.from({ length: 9 }, (_, i) => ({
       l: i % 2 === 0 ? 2 + Math.random() * 16 : 80 + Math.random() * 16,
@@ -71,16 +71,37 @@ function Balloons() {
       sw: (Math.random() * 10 - 5),
     })));
   }, []);
+  // Click to pop: a quick burst, then a fresh balloon drifts in its place.
+  const pop = (bal: Bal) => {
+    if (bal.popped) return;
+    setBals(prev => prev.map(x => (x === bal ? { ...x, popped: true } : x)));
+    setTimeout(() => {
+      setBals(prev => prev.map(x => (
+        x === bal
+          ? {
+              l: Math.random() < 0.5 ? 2 + Math.random() * 16 : 80 + Math.random() * 16,
+              d: 15 + Math.random() * 13,
+              dl: 0,
+              s: 0.55 + Math.random() * 0.75,
+              k: Math.floor(Math.random() * 3),
+              sw: (Math.random() * 10 - 5),
+            }
+          : x
+      )));
+    }, 450);
+  };
   return (
     <div className="balloon-sky" aria-hidden="true">
       {bals.map((b, i) => (
         <span
           key={i}
-          className={`balloon balloon-v${b.k}`}
+          className={`balloon balloon-v${b.k}${b.popped ? " popped" : ""}`}
+          title="Pop!"
+          onClick={() => pop(b)}
           style={{
             left: `${b.l}%`,
-            animationDuration: `${b.d}s`,
-            animationDelay: `${b.dl}s`,
+            animationDuration: b.popped ? ".38s" : `${b.d}s`,
+            animationDelay: b.popped ? "0s" : `${b.dl}s`,
             scale: `${b.s}`,
             "--sway": `${b.sw}deg`,
           } as React.CSSProperties}

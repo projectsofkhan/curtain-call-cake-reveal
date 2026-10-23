@@ -470,9 +470,20 @@ html { scrollbar-color: var(--wed-green) var(--wed-white); scrollbar-width: thin
   width: 52px;
   height: 64px;
   border-radius: 50% 50% 47% 47%;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   animation: balloon-rise linear infinite;
   transform-origin: 50% 120%;
+}
+.balloon.popped {
+  pointer-events: none;
+  animation: balloon-pop .38s cubic-bezier(.2, 1.4, .5, 1) forwards;
+}
+@keyframes balloon-pop {
+  0% { scale: 1; opacity: 1; }
+  40% { scale: 1.45; opacity: .95; }
+  100% { scale: 1.85; opacity: 0; }
 }
 .balloon-v0 { background: radial-gradient(circle at 32% 24%, var(--wed-white) 8%, var(--wed-green) 58%, var(--wed-green-deep) 100%); box-shadow: inset -7px -9px 16px color-mix(in oklab, var(--wed-green-deep) 45%, transparent); }
 .balloon-v1 { background: radial-gradient(circle at 32% 24%, var(--wed-white) 10%, var(--wed-green-soft) 55%, color-mix(in oklab, var(--wed-green) 55%, var(--wed-white)) 100%); box-shadow: inset -7px -9px 16px color-mix(in oklab, var(--wed-green) 30%, transparent); }
