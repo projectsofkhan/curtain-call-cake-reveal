@@ -74,7 +74,7 @@ function makeBalloon(i: number, fresh = false): Bal {
 
 function playPopSound() {
   try {
-    const audio = new Audio("/pop.mp4");
+    const audio = new Audio("/pop.mp3");
     audio.currentTime = 0;
     audio.play().catch(() => {
       // Handled silently if autoplay is blocked or file is missing
