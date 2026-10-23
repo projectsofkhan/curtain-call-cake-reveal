@@ -112,7 +112,7 @@ function Cake() {
       <div className="invitation-divider reveal" aria-hidden><i className="fa-solid fa-leaf" /></div>
       <div className="cake-wish reveal">
         <i className="fa-solid fa-star cake-wish-star" aria-hidden />
-        <p className="cake-wish-line">Happy Birthday, {INVITATION.name.split(" ")[0]}!</p>
+        <p className="cake-wish-line">Happy Birthday, {INVITATION.name}!</p>
         <p className="eyebrow">MAY EVERY WISH OF YOURS COME TRUE</p>
       </div>
     </section>
