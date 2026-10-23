@@ -100,8 +100,8 @@ function Balloons() {
           onClick={() => pop(b)}
           style={{
             left: `${b.l}%`,
-            animationDuration: `${b.d}s`,
-            animationDelay: `${b.dl}s`,
+            animationDuration: b.popped ? ".38s" : `${b.d}s`,
+            animationDelay: b.popped ? "0s" : `${b.dl}s`,
             scale: `${b.s}`,
             "--sway": `${b.sw}deg`,
           } as React.CSSProperties}
